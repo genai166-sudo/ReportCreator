@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방산 리서치 아카이브</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --border: #e2e5ea;
+      --text-primary: #1a2332;
+      --text-secondary: #5c6573;
+      --text-muted: #8b939e;
+      --accent: #2c4a6e;
+      --accent-light: #eef2f7;
+      --tavily: #1e5a8a;
+      --tavily-light: #e8f1f8;
+      --naver: #03a94d;
+      --naver-light: #e8f7ee;
+      --shadow: 0 1px 3px rgba(26, 35, 50, 0.06);
+      --radius: 8px;
+    }
+
+    body {
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    header > p {
+      margin-top: 0.5rem;
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+    }
+
+    .research-form {
+      display: flex;
+      gap: 0.625rem;
+      margin-top: 1.25rem;
+    }
+
+    .research-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .research-form input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(44, 74, 110, 0.12);
+    }
+
+    .research-form button {
+      flex-shrink: 0;
+      padding: 0.625rem 1.125rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .research-form button:hover:not(:disabled) {
+      background: #243d5a;
+    }
+
+    .research-form button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .research-status {
+      margin-top: 0.625rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .research-status--error {
+      color: #b42318;
+    }
+
+    .research-status--ok {
+      color: #027a48;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+      padding: 1rem 1.25rem;
+      background: var(--accent-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+
+    .section-header--tavily {
+      background: var(--tavily-light);
+    }
+
+    .section-header--tavily h2 {
+      color: var(--tavily);
+    }
+
+    .section-header--naver {
+      background: var(--naver-light);
+    }
+
+    .section-header--naver h2 {
+      color: var(--naver);
+    }
+
+    .section-header--report {
+      background: #f3f0fa;
+    }
+
+    .section-header--report h2 {
+      color: #5b4b8a;
+    }
+
+    .report-panel {
+      padding: 1.5rem 1.25rem;
+    }
+
+    .report-panel__title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .report-panel__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 0.375rem;
+    }
+
+    .report-panel__summary {
+      padding: 1rem;
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      white-space: pre-wrap;
+    }
+
+    .report-panel__body {
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      margin-bottom: 1.25rem;
+      white-space: pre-wrap;
+      line-height: 1.75;
+    }
+
+    .report-panel__sources {
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .report-panel__sources-content {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+
+    .report-panel__model {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .section-meta {
+      margin-top: 0.25rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .report-list {
+      list-style: none;
+      min-height: 120px;
+    }
+
+    .report-list-item {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+
+    .report-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .report-list-item--new {
+      background: #f0f7ff;
+    }
+
+    .report-list-item__topic {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-light);
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.375rem;
+    }
+
+    .report-list-item__title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text-primary);
+    }
+
+    .report-list-item__summary {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.375rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .report-list-item__meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .result-list {
+      list-style: none;
+    }
+
+    .result-item {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-item__title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+    }
+
+    .result-item__title a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .result-item__title a:hover {
+      text-decoration: underline;
+      color: var(--accent);
+    }
+
+    .result-item__body {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-item__meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3.5rem 1.5rem;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .empty-state p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+    }
+
+    .error-box {
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      color: #b42318;
+      background: #fef3f2;
+    }
+
+    #research-results[hidden] {
+      display: none;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>방산 리서치 아카이브</h1>
+      <p>방위산업 관련 리서치 보고서를 모아두는 아카이브입니다.</p>
+
+      <form id="research-form" class="research-form">
+        <input
+          id="topic-input"
+          type="text"
+          name="keyword"
+          placeholder="관심 주제 키워드 (예: KF-21, 방산 수출, 드론)"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" id="research-btn">리서치 실행</button>
+      </form>
+      <p id="research-status" class="research-status" hidden></p>
+    </header>
+
+    <div id="research-results" hidden>
+      <section aria-labelledby="report-heading">
+        <div class="section-header section-header--report">
+          <h2 id="report-heading">AI 리서치 보고서</h2>
+          <p class="section-meta" id="report-meta"></p>
+        </div>
+        <div class="report-panel" id="report-panel">
+          <p class="empty-state" style="padding:2rem 0">리서치를 실행하면 보고서가 여기에 표시됩니다.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="tavily-results-heading">
+        <div class="section-header section-header--tavily">
+          <h2 id="tavily-results-heading">글로벌 검색 (Tavily)</h2>
+          <p class="section-meta" id="tavily-meta"></p>
+        </div>
+        <ul class="result-list" id="tavily-results"></ul>
+      </section>
+
+      <section aria-labelledby="naver-results-heading">
+        <div class="section-header section-header--naver">
+          <h2 id="naver-results-heading">국내 검색 (Naver)</h2>
+          <p class="section-meta" id="naver-meta"></p>
+        </div>
+        <ul class="result-list" id="naver-results"></ul>
+      </section>
+    </div>
+
+    <section aria-labelledby="report-list-heading">
+      <div class="section-header">
+        <h2 id="report-list-heading">보고서 목록</h2>
+      </div>
+
+      <ul class="report-list" id="report-list">
+        <li class="empty-state">
+          <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+          </svg>
+          <p>등록된 보고서가 없습니다.</p>
+        </li>
+      </ul>
+    </section>
+
+    <footer>
+      방산 리서치 아카이브
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById("research-form");
+    const topicInput = document.getElementById("topic-input");
+    const researchBtn = document.getElementById("research-btn");
+    const statusEl = document.getElementById("research-status");
+    const resultsWrap = document.getElementById("research-results");
+    const tavilyList = document.getElementById("tavily-results");
+    const naverList = document.getElementById("naver-results");
+    const tavilyMeta = document.getElementById("tavily-meta");
+    const naverMeta = document.getElementById("naver-meta");
+    const reportPanel = document.getElementById("report-panel");
+    const reportMeta = document.getElementById("report-meta");
+    const reportListEl = document.getElementById("report-list");
+
+    let highlightReportId = null;
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function setStatus(message, type) {
+      statusEl.hidden = !message;
+      statusEl.textContent = message || "";
+      statusEl.className = "research-status" + (type ? ` research-status--${type}` : "");
+    }
+
+    function setLoading(loading) {
+      researchBtn.disabled = loading;
+      topicInput.disabled = loading;
+      researchBtn.textContent = loading ? "작성 중…" : "리서치 실행";
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    }
+
+    function renderReportList(reports) {
+      if (!reports?.length) {
+        reportListEl.innerHTML = `
+          <li class="empty-state">
+            <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <p>등록된 보고서가 없습니다.</p>
+          </li>`;
+        return;
+      }
+
+      reportListEl.innerHTML = reports.map((item) => {
+        const isNew = highlightReportId != null && item.id === highlightReportId;
+        return `
+          <li class="report-list-item${isNew ? " report-list-item--new" : ""}" data-id="${item.id}">
+            <span class="report-list-item__topic">${escapeHtml(item.topic || "주제 없음")}</span>
+            <div class="report-list-item__title">${escapeHtml(item.title || "제목 없음")}</div>
+            <div class="report-list-item__summary">${escapeHtml(item.summary || "")}</div>
+            <div class="report-list-item__meta">${formatDate(item.created_at)} · ${escapeHtml(item.source_type || "search")}</div>
+          </li>`;
+      }).join("");
+    }
+
+    async function loadReportList(highlightId) {
+      if (highlightId != null) highlightReportId = highlightId;
+
+      try {
+        const res = await fetch("/api/reports");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "목록을 불러오지 못했습니다.");
+        renderReportList(data.reports || []);
+      } catch (err) {
+        reportListEl.innerHTML = `<li class="error-box">${escapeHtml(err.message)}</li>`;
+      }
+    }
+
+    function renderReport(report) {
+      if (!report?.ok) {
+        reportPanel.innerHTML = `<div class="error-box">${escapeHtml(report?.error || "보고서 생성 실패")}</div>`;
+        reportMeta.textContent = "";
+        return;
+      }
+
+      reportMeta.textContent = report.model ? `모델: ${report.model}` : "";
+
+      reportPanel.innerHTML = `
+        <div class="report-panel__title">${escapeHtml(report.title || "제목 없음")}</div>
+
+        <div class="report-panel__label">요약</div>
+        <div class="report-panel__summary">${escapeHtml(report.summary || "요약 없음")}</div>
+
+        <div class="report-panel__label">본문</div>
+        <div class="report-panel__body">${escapeHtml(report.body || "본문 없음")}</div>
+
+        <div class="report-panel__sources">
+          <div class="report-panel__label">참고 출처</div>
+          <div class="report-panel__sources-content">${escapeHtml(report.sources || "출처 없음")}</div>
+        </div>
+      `;
+    }
+
+    function renderError(container, message) {
+      container.innerHTML = `<li class="error-box">${escapeHtml(message)}</li>`;
+    }
+
+    function renderEmpty(container, message) {
+      container.innerHTML = `<li class="empty-state"><p>${escapeHtml(message)}</p></li>`;
+    }
+
+    function renderTavilyResults(data) {
+      if (!data.ok) {
+        renderError(tavilyList, data.error || "Tavily 검색 실패");
+        tavilyMeta.textContent = "";
+        return;
+      }
+
+      const results = data.results || [];
+      tavilyMeta.textContent = `"${escapeHtml(data.query || "")}" · ${results.length}건`;
+
+      if (!results.length) {
+        renderEmpty(tavilyList, "검색 결과가 없습니다.");
+        return;
+      }
+
+      tavilyList.innerHTML = results.map((item) => `
+        <li class="result-item">
+          <div class="result-item__title">
+            <a href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(item.title || "제목 없음")}
+            </a>
+          </div>
+          <div class="result-item__body">${escapeHtml(item.content || "")}</div>
+          <div class="result-item__meta">
+            ${item.published_date ? `날짜: ${escapeHtml(item.published_date)} · ` : ""}
+            ${item.url ? escapeHtml(item.url) : ""}
+            ${item.score != null ? ` · score: ${item.score}` : ""}
+          </div>
+        </li>
+      `).join("");
+    }
+
+    function renderNaverResults(data) {
+      if (!data.ok) {
+        renderError(naverList, data.error || "Naver 검색 실패");
+        naverMeta.textContent = "";
+        return;
+      }
+
+      const items = data.items || [];
+      naverMeta.textContent = `총 ${data.total ?? items.length}건 중 ${items.length}건 표시`;
+
+      if (!items.length) {
+        renderEmpty(naverList, "검색 결과가 없습니다.");
+        return;
+      }
+
+      naverList.innerHTML = items.map((item) => `
+        <li class="result-item">
+          <div class="result-item__title">
+            <a href="${escapeHtml(item.originallink || item.link || "#")}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(item.title || "제목 없음")}
+            </a>
+          </div>
+          <div class="result-item__body">${escapeHtml(item.description || "")}</div>
+          <div class="result-item__meta">
+            ${item.pubDate ? `날짜: ${escapeHtml(item.pubDate)} · ` : ""}
+            ${item.originallink ? escapeHtml(item.originallink) : escapeHtml(item.link || "")}
+          </div>
+        </li>
+      `).join("");
+    }
+
+    async function runResearch(keyword) {
+      const res = await fetch("/api/research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `요청 실패 (${res.status})`);
+      }
+      return data;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const keyword = topicInput.value.trim();
+      if (!keyword) {
+        setStatus("주제 키워드를 입력하세요.", "error");
+        return;
+      }
+
+      setLoading(true);
+      setStatus("검색 및 AI 보고서 작성 중…", "");
+      resultsWrap.hidden = false;
+      reportPanel.innerHTML = `<p class="empty-state" style="padding:2rem 0">Gemini가 보고서를 작성하고 있습니다…</p>`;
+
+      try {
+        const data = await runResearch(keyword);
+        renderReport(data.report);
+        renderTavilyResults(data.tavily);
+        renderNaverResults(data.naver);
+
+        const tCount = data.summary?.tavilyCount ?? 0;
+        const nCount = data.summary?.naverCount ?? 0;
+        const reportOk = data.report?.ok;
+        const saved = data.report?.saved;
+        if (saved && data.report?.savedId) {
+          await loadReportList(data.report.savedId);
+        }
+
+        setStatus(
+          reportOk
+            ? saved
+              ? `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 보고서 저장됨`
+              : `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 실패: ${data.report?.saveError || ""}`
+            : `검색 완료 (${tCount}/${nCount}건) · 보고서: ${data.report?.error || "생성 실패"}`,
+          reportOk && saved ? "ok" : reportOk ? "error" : "error"
+        );
+      } catch (err) {
+        setStatus(err.message, "error");
+        renderReport({ ok: false, error: err.message });
+        renderError(tavilyList, err.message);
+        renderError(naverList, err.message);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    loadReportList();
+  </script>
+</body>
+</html>

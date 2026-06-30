@@ -1,0 +1,22 @@
+{
+  "name": "defense-research-archive",
+  "private": true,
+  "description": "방산 리서치 아카이브 — Vercel Serverless API",
+  "scripts": {
+    "predev": "node scripts/check-node.js",
+    "dev": "node scripts/dev.js",
+    "dev:vercel": "vercel dev --listen 3000",
+    "dev:node": "node server/dev-server.js",
+    "build": "node -e \"console.log('Static site — no build step')\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "vercel": "^44.0.0"
+  }
+}

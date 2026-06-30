@@ -221,6 +221,179 @@
       color: var(--report-accent);
     }
 
+    .section-header--analyze {
+      background: #1a2a24;
+    }
+
+    .section-header--analyze h2 {
+      color: #3fb950;
+    }
+
+    .file-analyze-panel {
+      padding: 1.25rem;
+    }
+
+    .file-analyze-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .file-analyze-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.625rem;
+      align-items: center;
+    }
+
+    .file-analyze-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      min-width: 4.5rem;
+    }
+
+    .file-analyze-input {
+      display: none;
+    }
+
+    .file-analyze-pick {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.875rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: var(--surface-raised, #1c2129);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .file-analyze-pick:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .file-analyze-name {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    .file-analyze-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .file-analyze-option {
+      position: relative;
+    }
+
+    .file-analyze-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .file-analyze-option span {
+      display: inline-block;
+      padding: 0.4375rem 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--surface-raised, #1c2129);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .file-analyze-option input:checked + span {
+      color: #3fb950;
+      background: #132519;
+      border-color: #238636;
+    }
+
+    .file-analyze-option small {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      padding-left: 0.25rem;
+    }
+
+    .file-analyze-submit {
+      align-self: flex-start;
+      padding: 0.625rem 1.125rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #0d1117;
+      background: #3fb950;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .file-analyze-submit:hover:not(:disabled) {
+      background: #56d364;
+    }
+
+    .file-analyze-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .file-analyze-status {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .file-analyze-status--error {
+      color: var(--error);
+    }
+
+    .file-analyze-result {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .file-analyze-result__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .file-analyze-result__badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      background: #132519;
+      color: #3fb950;
+      font-weight: 600;
+    }
+
+    .file-analyze-result__body {
+      padding: 1rem 1.125rem;
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .report-panel {
       padding: 1.5rem 1.25rem;
     }
@@ -473,6 +646,52 @@
       <div id="kakao-banner" class="kakao-banner" hidden></div>
     </header>
 
+    <section aria-labelledby="file-analyze-heading">
+      <div class="section-header section-header--analyze">
+        <h2 id="file-analyze-heading">파일 분석</h2>
+        <p class="section-meta">PDF · 이미지 · 음성을 AI로 분석합니다</p>
+      </div>
+      <div class="file-analyze-panel">
+        <form id="file-analyze-form" class="file-analyze-form">
+          <div class="file-analyze-row">
+            <span class="file-analyze-label">파일</span>
+            <label class="file-analyze-pick" for="file-analyze-input">파일 선택</label>
+            <input
+              id="file-analyze-input"
+              class="file-analyze-input"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.wav,.mp3,.aiff,.aac,.ogg,.flac,application/pdf,image/*,audio/*"
+            />
+            <span id="file-analyze-name" class="file-analyze-name">선택된 파일 없음</span>
+          </div>
+
+          <div class="file-analyze-row">
+            <span class="file-analyze-label">분석 방식</span>
+            <div class="file-analyze-options" role="radiogroup" aria-label="분석 방식">
+              <label class="file-analyze-option">
+                <input type="radio" name="analyze-mode" value="summary" checked />
+                <span>핵심 요약</span>
+              </label>
+              <label class="file-analyze-option">
+                <input type="radio" name="analyze-mode" value="checklist" />
+                <span>체크리스트 추출</span>
+              </label>
+              <label class="file-analyze-option">
+                <input type="radio" name="analyze-mode" value="transcript" />
+                <span>전체 받아쓰기</span>
+                <small>음성 파일에 적합</small>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" id="file-analyze-btn" class="file-analyze-submit" disabled>분석 요청</button>
+          <p id="file-analyze-status" class="file-analyze-status" hidden></p>
+        </form>
+
+        <div id="file-analyze-result" class="file-analyze-result" hidden></div>
+      </div>
+    </section>
+
     <div id="research-results" hidden>
       <section aria-labelledby="tavily-results-heading">
         <div class="section-header section-header--tavily">
@@ -535,6 +754,27 @@
     const reportMeta = document.getElementById("report-meta");
     const reportListEl = document.getElementById("report-list");
     const kakaoBanner = document.getElementById("kakao-banner");
+    const fileAnalyzeForm = document.getElementById("file-analyze-form");
+    const fileAnalyzeInput = document.getElementById("file-analyze-input");
+    const fileAnalyzeName = document.getElementById("file-analyze-name");
+    const fileAnalyzeBtn = document.getElementById("file-analyze-btn");
+    const fileAnalyzeStatus = document.getElementById("file-analyze-status");
+    const fileAnalyzeResult = document.getElementById("file-analyze-result");
+
+    const ANALYSIS_PROMPTS = {
+      summary:
+        "첨부된 파일의 핵심 내용을 한국어로 요약해 주세요. 중요한 사실·수치·결론을 bullet point 5~8개로 정리하고, 마지막에 한 줄 핵심 결론을 덧붙여 주세요.",
+      checklist:
+        "첨부된 파일에서 실행 가능한 항목, 요건, 할 일, 주의사항을 한국어 체크리스트 형식으로 추출해 주세요. 각 항목 앞에 [ ]를 붙이고, 카테고리별로 묶어 주세요.",
+      transcript:
+        "첨부된 파일의 내용을 한국어로 전사(받아쓰기)해 주세요. 음성이면 말한 내용을 빠짐없이 문단으로 정리하고 화자 구분이 가능하면 구분해 주세요. 문서·이미지면 보이는 텍스트를 있는 그대로 정리해 주세요.",
+    };
+
+    const ANALYSIS_LABELS = {
+      summary: "핵심 요약",
+      checklist: "체크리스트 추출",
+      transcript: "전체 받아쓰기",
+    };
 
     let highlightReportId = null;
     let kakaoLoginUrl = "/api/kakao/oauth/login";
@@ -860,6 +1100,90 @@
 
     loadReportList();
     loadKakaoStatus();
+
+    function setFileAnalyzeStatus(message, isError) {
+      fileAnalyzeStatus.hidden = !message;
+      fileAnalyzeStatus.textContent = message || "";
+      fileAnalyzeStatus.className = "file-analyze-status" + (isError ? " file-analyze-status--error" : "");
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes) return "";
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function getSelectedAnalyzeMode() {
+      const checked = fileAnalyzeForm.querySelector('input[name="analyze-mode"]:checked');
+      return checked?.value || "summary";
+    }
+
+    function renderFileAnalyzeResult(data, mode) {
+      fileAnalyzeResult.hidden = false;
+      fileAnalyzeResult.innerHTML = `
+        <div class="file-analyze-result__meta">
+          <span class="file-analyze-result__badge">${escapeHtml(ANALYSIS_LABELS[mode] || mode)}</span>
+          <span>${escapeHtml(data.fileName || "파일")}</span>
+          <span>${escapeHtml(data.mimeType || "")}</span>
+          ${data.model ? `<span>모델: ${escapeHtml(data.model)}</span>` : ""}
+        </div>
+        <div class="file-analyze-result__body">${escapeHtml(data.analysis || "결과 없음")}</div>
+      `;
+    }
+
+    fileAnalyzeInput.addEventListener("change", () => {
+      const file = fileAnalyzeInput.files?.[0];
+      if (!file) {
+        fileAnalyzeName.textContent = "선택된 파일 없음";
+        fileAnalyzeBtn.disabled = true;
+        return;
+      }
+      fileAnalyzeName.textContent = `${file.name} (${formatFileSize(file.size)})`;
+      fileAnalyzeBtn.disabled = false;
+    });
+
+    fileAnalyzeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = fileAnalyzeInput.files?.[0];
+      if (!file) {
+        setFileAnalyzeStatus("파일을 선택해 주세요.", true);
+        return;
+      }
+
+      const mode = getSelectedAnalyzeMode();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("prompt", ANALYSIS_PROMPTS[mode]);
+
+      fileAnalyzeBtn.disabled = true;
+      fileAnalyzeInput.disabled = true;
+      fileAnalyzeBtn.textContent = "분석 중…";
+      setFileAnalyzeStatus("AI가 파일을 분석하고 있습니다…", false);
+      fileAnalyzeResult.hidden = true;
+      fileAnalyzeResult.innerHTML = renderLoadingPanel("AI가 파일을 분석하고 있습니다…");
+      fileAnalyzeResult.hidden = false;
+
+      try {
+        const res = await fetch("/api/analyze-file", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `분석 실패 (${res.status})`);
+
+        renderFileAnalyzeResult(data, mode);
+        setFileAnalyzeStatus("분석이 완료되었습니다.", false);
+      } catch (err) {
+        fileAnalyzeResult.hidden = false;
+        fileAnalyzeResult.innerHTML = `<div class="error-box">${escapeHtml(err.message)}</div>`;
+        setFileAnalyzeStatus(err.message, true);
+      } finally {
+        fileAnalyzeBtn.disabled = false;
+        fileAnalyzeInput.disabled = false;
+        fileAnalyzeBtn.textContent = "분석 요청";
+      }
+    });
   </script>
 </body>
 </html>

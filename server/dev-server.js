@@ -11,6 +11,7 @@ const path = require("path");
 const { URL } = require("url");
 
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+const { readRawBody } = require("../lib/parse-upload");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, "..");
@@ -119,6 +120,24 @@ function createVercelResponse(res) {
 async function dispatchApi(req, res, pathname, searchParams) {
   const query = Object.fromEntries(searchParams.entries());
   let body = {};
+
+  if (pathname === "/api/analyze-file" && req.method === "POST") {
+    try {
+      const rawBody = await readRawBody(req);
+      body = { __rawBody: rawBody };
+      const vercelReq = Object.assign({}, toVercelRequest(req, body, query), {
+        rawBody,
+        headers: req.headers,
+      });
+      const vercelRes = createVercelResponse(res);
+      await apiHandlers[pathname](vercelReq, vercelRes);
+      return;
+    } catch (err) {
+      res.writeHead(err.status || 400, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: err.message }));
+      return;
+    }
+  }
 
   if (req.method === "POST") {
     try {

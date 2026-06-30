@@ -38,8 +38,9 @@ module.exports = async function handler(req, res) {
       : `<p>Refresh Token이 없습니다. 동의 항목 <code>talk_message</code> 확인 후 다시 로그인하세요.</p>`;
 
     const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><title>카카오 연동 완료</title>
-<style>body{font-family:sans-serif;background:#f4f5f7;color:#1a2332;padding:2rem;max-width:640px;margin:auto}
-code{background:#eef2f7;padding:2px 6px;border-radius:4px;word-break:break-all}</style></head><body>
+<style>body{font-family:sans-serif;background:#0d1117;color:#e6edf3;padding:2rem;max-width:640px;margin:auto}
+code,pre{background:#1a2a3d;padding:2px 6px;border-radius:4px;word-break:break-all}
+a{color:#58a6ff}</style></head><body>
 <h1>카카오톡 연동 완료</h1>
 <p>OAuth 인증이 완료되었습니다. 이제 리서치 보고서가 카카오톡으로 전송됩니다.</p>
 ${tokenBlock}

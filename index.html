@@ -14,19 +14,34 @@
     }
 
     :root {
-      --bg: #f4f5f7;
-      --surface: #ffffff;
-      --border: #e2e5ea;
-      --text-primary: #1a2332;
-      --text-secondary: #5c6573;
-      --text-muted: #8b939e;
-      --accent: #2c4a6e;
-      --accent-light: #eef2f7;
-      --tavily: #1e5a8a;
-      --tavily-light: #e8f1f8;
-      --naver: #03a94d;
-      --naver-light: #e8f7ee;
-      --shadow: 0 1px 3px rgba(26, 35, 50, 0.06);
+      color-scheme: dark;
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-raised: #1c2129;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #9da7b3;
+      --text-muted: #6e7681;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --accent-light: #1a2a3d;
+      --tavily: #58a6ff;
+      --tavily-light: #152238;
+      --naver: #3fb950;
+      --naver-light: #132519;
+      --report-accent: #a371f7;
+      --report-light: #1f1633;
+      --success: #3fb950;
+      --success-bg: #12261a;
+      --success-border: #238636;
+      --error: #f85149;
+      --error-bg: #2d1214;
+      --error-border: #6e2a2a;
+      --warn-bg: #2a2410;
+      --warn-text: #e3b341;
+      --warn-border: #4d3d14;
+      --highlight: #1a2f4a;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
       --radius: 8px;
     }
 
@@ -84,7 +99,7 @@
     .research-form input:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(44, 74, 110, 0.12);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
     }
 
     .research-form button {
@@ -93,7 +108,7 @@
       font-size: 0.9375rem;
       font-weight: 600;
       font-family: inherit;
-      color: #fff;
+      color: #0d1117;
       background: var(--accent);
       border: none;
       border-radius: var(--radius);
@@ -102,7 +117,7 @@
     }
 
     .research-form button:hover:not(:disabled) {
-      background: #243d5a;
+      background: var(--accent-hover);
     }
 
     .research-form button:disabled {
@@ -117,11 +132,11 @@
     }
 
     .research-status--error {
-      color: #b42318;
+      color: var(--error);
     }
 
     .research-status--ok {
-      color: #027a48;
+      color: var(--success);
     }
 
     .kakao-banner {
@@ -129,15 +144,15 @@
       padding: 0.75rem 1rem;
       border-radius: var(--radius);
       font-size: 0.875rem;
-      border: 1px solid var(--border);
-      background: #fff9e6;
-      color: #5c4a00;
+      border: 1px solid var(--warn-border);
+      background: var(--warn-bg);
+      color: var(--warn-text);
     }
 
     .kakao-banner--ok {
-      background: #ecfdf3;
-      color: #027a48;
-      border-color: #abefc6;
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: var(--success-border);
     }
 
     .kakao-banner a {
@@ -199,11 +214,11 @@
     }
 
     .section-header--report {
-      background: #f3f0fa;
+      background: var(--report-light);
     }
 
     .section-header--report h2 {
-      color: #5b4b8a;
+      color: var(--report-accent);
     }
 
     .report-panel {
@@ -287,7 +302,7 @@
     }
 
     .report-list-item--new {
-      background: #f0f7ff;
+      background: var(--highlight);
     }
 
     .report-list-item__topic {
@@ -390,8 +405,39 @@
     .error-box {
       padding: 1rem 1.25rem;
       font-size: 0.875rem;
-      color: #b42318;
-      background: #fef3f2;
+      color: var(--error);
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: var(--radius);
+    }
+
+    .loading-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .loading-panel__spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-panel p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     #research-results[hidden] {
@@ -428,16 +474,6 @@
     </header>
 
     <div id="research-results" hidden>
-      <section aria-labelledby="report-heading">
-        <div class="section-header section-header--report">
-          <h2 id="report-heading">AI 리서치 보고서</h2>
-          <p class="section-meta" id="report-meta"></p>
-        </div>
-        <div class="report-panel" id="report-panel">
-          <p class="empty-state" style="padding:2rem 0">리서치를 실행하면 보고서가 여기에 표시됩니다.</p>
-        </div>
-      </section>
-
       <section aria-labelledby="tavily-results-heading">
         <div class="section-header section-header--tavily">
           <h2 id="tavily-results-heading">글로벌 검색 (Tavily)</h2>
@@ -452,6 +488,16 @@
           <p class="section-meta" id="naver-meta"></p>
         </div>
         <ul class="result-list" id="naver-results"></ul>
+      </section>
+
+      <section aria-labelledby="report-heading">
+        <div class="section-header section-header--report">
+          <h2 id="report-heading">AI 리서치 보고서</h2>
+          <p class="section-meta" id="report-meta"></p>
+        </div>
+        <div class="report-panel" id="report-panel">
+          <p class="empty-state" style="padding:2rem 0">리서치를 실행하면 보고서가 여기에 표시됩니다.</p>
+        </div>
       </section>
     </div>
 
@@ -508,10 +554,31 @@
       statusEl.className = "research-status" + (type ? ` research-status--${type}` : "");
     }
 
-    function setLoading(loading) {
+    function setLoading(loading, label) {
       researchBtn.disabled = loading;
       topicInput.disabled = loading;
-      researchBtn.textContent = loading ? "작성 중…" : "리서치 실행";
+      researchBtn.textContent = loading ? (label || "처리 중…") : "리서치 실행";
+    }
+
+    function renderLoadingPanel(message) {
+      return `
+        <div class="loading-panel">
+          <div class="loading-panel__spinner" aria-hidden="true"></div>
+          <p>${escapeHtml(message)}</p>
+        </div>`;
+    }
+
+    function renderSearchLoading() {
+      const html = `<li class="loading-panel"><div class="loading-panel__spinner" aria-hidden="true"></div><p>검색 중…</p></li>`;
+      tavilyList.innerHTML = html;
+      naverList.innerHTML = html;
+      tavilyMeta.textContent = "";
+      naverMeta.textContent = "";
+    }
+
+    function renderReportLoading() {
+      reportMeta.textContent = "작성 중";
+      reportPanel.innerHTML = renderLoadingPanel("Gemini가 검색 결과를 바탕으로 보고서를 작성하고 있습니다…");
     }
 
     function renderKakaoBanner(configured, message) {
@@ -684,18 +751,57 @@
       `).join("");
     }
 
-    async function runResearch(keyword) {
-      const res = await fetch("/api/research", {
+    async function fetchSearch(keyword) {
+      const res = await fetch("/api/research/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keyword }),
       });
-
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || `요청 실패 (${res.status})`);
-      }
+      if (!res.ok) throw new Error(data.error || `검색 실패 (${res.status})`);
       return data;
+    }
+
+    async function fetchReport(keyword, tavily, naver) {
+      const res = await fetch("/api/research/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword, tavily, naver }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `보고서 생성 실패 (${res.status})`);
+      return data;
+    }
+
+    function buildStatusMessage(summary, report) {
+      const tCount = summary?.tavilyCount ?? 0;
+      const nCount = summary?.naverCount ?? 0;
+      const reportOk = report?.ok;
+      const saved = report?.saved;
+      const kakaoSent = report?.kakaoSent;
+
+      if (reportOk && saved && kakaoSent) {
+        return { msg: `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 및 카카오톡 전송됨`, type: "ok" };
+      }
+      if (reportOk && saved) {
+        const type = report?.kakaoError ? "error" : "ok";
+        return {
+          msg: `완료 — 보고서 저장됨 · 카카오: ${report?.kakaoError || "전송 실패"}`,
+          type,
+          kakaoError: report?.kakaoError,
+          kakaoLoginUrl: report?.kakaoLoginUrl,
+        };
+      }
+      if (reportOk) {
+        return {
+          msg: `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 실패: ${report?.saveError || ""}`,
+          type: "error",
+        };
+      }
+      return {
+        msg: `검색 완료 (${tCount}/${nCount}건) · 보고서: ${report?.error || "생성 실패"}`,
+        type: "error",
+      };
     }
 
     form.addEventListener("submit", async (e) => {
@@ -706,50 +812,47 @@
         return;
       }
 
-      setLoading(true);
-      setStatus("검색 및 AI 보고서 작성 중…", "");
+      setLoading(true, "검색 중…");
+      setStatus("글로벌·국내 검색 중…", "");
       resultsWrap.hidden = false;
-      reportPanel.innerHTML = `<p class="empty-state" style="padding:2rem 0">Gemini가 보고서를 작성하고 있습니다…</p>`;
+      renderSearchLoading();
+      renderReportLoading();
 
       try {
-        const data = await runResearch(keyword);
-        renderReport(data.report);
-        renderTavilyResults(data.tavily);
-        renderNaverResults(data.naver);
+        const searchData = await fetchSearch(keyword);
+        renderTavilyResults(searchData.tavily);
+        renderNaverResults(searchData.naver);
 
-        const tCount = data.summary?.tavilyCount ?? 0;
-        const nCount = data.summary?.naverCount ?? 0;
-        const reportOk = data.report?.ok;
-        const saved = data.report?.saved;
-        const kakaoSent = data.report?.kakaoSent;
-        if (saved && data.report?.savedId) {
-          await loadReportList(data.report.savedId);
-        }
+        const tCount = searchData.summary?.tavilyCount ?? 0;
+        const nCount = searchData.summary?.naverCount ?? 0;
+        setStatus(`검색 완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · AI 보고서 작성 중…`, "");
+        setLoading(true, "보고서 작성 중…");
+        renderReportLoading();
 
-        let statusMsg;
-        let statusType = "ok";
-        if (reportOk && saved && kakaoSent) {
-          statusMsg = `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 및 카카오톡 전송됨`;
-        } else if (reportOk && saved) {
-          statusMsg = `완료 — 보고서 저장됨 · 카카오: ${data.report?.kakaoError || "전송 실패"}`;
-          statusType = data.report?.kakaoError ? "error" : "ok";
-          if (data.report?.kakaoLoginUrl) {
-            kakaoLoginUrl = data.report.kakaoLoginUrl;
-            renderKakaoBanner(false, data.report.kakaoError);
+        try {
+          const reportData = await fetchReport(keyword, searchData.tavily, searchData.naver);
+          const report = reportData.report;
+          renderReport(report);
+
+          if (report?.saved && report?.savedId) {
+            await loadReportList(report.savedId);
           }
-        } else if (reportOk) {
-          statusMsg = `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 실패: ${data.report?.saveError || ""}`;
-          statusType = "error";
-        } else {
-          statusMsg = `검색 완료 (${tCount}/${nCount}건) · 보고서: ${data.report?.error || "생성 실패"}`;
-          statusType = "error";
+
+          const status = buildStatusMessage(searchData.summary, report);
+          setStatus(status.msg, status.type);
+          if (status.kakaoLoginUrl) {
+            kakaoLoginUrl = status.kakaoLoginUrl;
+            renderKakaoBanner(false, status.kakaoError);
+          }
+        } catch (reportErr) {
+          setStatus(reportErr.message, "error");
+          renderReport({ ok: false, error: reportErr.message });
         }
-        setStatus(statusMsg, statusType);
-      } catch (err) {
-        setStatus(err.message, "error");
-        renderReport({ ok: false, error: err.message });
-        renderError(tavilyList, err.message);
-        renderError(naverList, err.message);
+      } catch (searchErr) {
+        setStatus(searchErr.message, "error");
+        renderError(tavilyList, searchErr.message);
+        renderError(naverList, searchErr.message);
+        renderReport({ ok: false, error: searchErr.message });
       } finally {
         setLoading(false);
       }

@@ -7,9 +7,11 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #f4f5f7; --surface: #fff; --border: #e2e5ea;
-      --text-primary: #1a2332; --text-secondary: #5c6573; --text-muted: #8b939e;
-      --accent: #2c4a6e; --accent-light: #eef2f7; --radius: 8px;
+      color-scheme: dark;
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text-primary: #e6edf3; --text-secondary: #9da7b3; --text-muted: #6e7681;
+      --accent: #58a6ff; --accent-light: #1a2a3d; --radius: 8px;
+      --error: #f85149; --error-bg: #2d1214; --error-border: #6e2a2a;
     }
     body {
       font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -25,7 +27,7 @@
     .summary { background: var(--accent-light); padding: 1rem; border-radius: var(--radius); color: var(--text-secondary); margin-bottom: 1.25rem; white-space: pre-wrap; }
     .body, .sources { white-space: pre-wrap; color: var(--text-primary); margin-bottom: 1.25rem; line-height: 1.75; }
     .meta { font-size: 0.8125rem; color: var(--text-muted); margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-    .error { color: #b42318; background: #fef3f2; padding: 1rem; border-radius: var(--radius); }
+    .error { color: var(--error); background: var(--error-bg); border: 1px solid var(--error-border); padding: 1rem; border-radius: var(--radius); }
     .loading { color: var(--text-muted); text-align: center; padding: 3rem 0; }
   </style>
 </head>

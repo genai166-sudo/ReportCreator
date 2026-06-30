@@ -10,7 +10,7 @@
     "build": "node -e \"console.log('Static site — no build step')\""
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

@@ -16,16 +16,26 @@ const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, "..");
 const API_DIR = path.join(ROOT, "api");
 
-/** api/*.js 파일을 /api/{이름} 경로에 자동 등록 */
-function loadApiHandlers() {
+// api 폴더 하위 .js 파일을 /api/... 경로에 자동 등록
+function loadApiHandlers(dir = API_DIR, routePrefix = "/api") {
   const handlers = {};
-  if (!fs.existsSync(API_DIR)) return handlers;
+  if (!fs.existsSync(dir)) return handlers;
 
-  for (const file of fs.readdirSync(API_DIR)) {
-    if (!file.endsWith(".js")) continue;
-    const route = `/api/${file.replace(/\.js$/, "")}`;
-    handlers[route] = require(path.join(API_DIR, file));
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      Object.assign(handlers, loadApiHandlers(fullPath, `${routePrefix}/${entry.name}`));
+      continue;
+    }
+    if (!entry.name.endsWith(".js")) continue;
+    const route = `${routePrefix}/${entry.name.replace(/\.js$/, "")}`;
+    try {
+      handlers[route] = require(fullPath);
+    } catch (err) {
+      console.error(`Failed to load API route ${route}:`, err.message);
+    }
   }
+
   return handlers;
 }
 
@@ -84,7 +94,20 @@ function createVercelResponse(res) {
       }
       res.end(JSON.stringify(data));
     },
-    end() {
+    send(data) {
+      if (!res.headersSent) {
+        res.writeHead(this._status || 200);
+      }
+      res.end(data);
+    },
+    end(data) {
+      if (data !== undefined) {
+        if (!res.headersSent) {
+          res.writeHead(this._status || 200);
+        }
+        res.end(data);
+        return;
+      }
       if (!res.headersSent) {
         res.writeHead(this._status || 204);
       }

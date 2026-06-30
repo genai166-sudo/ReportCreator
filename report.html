@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보고서 상세 — 방산 리서치 아카이브</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f5f7; --surface: #fff; --border: #e2e5ea;
+      --text-primary: #1a2332; --text-secondary: #5c6573; --text-muted: #8b939e;
+      --accent: #2c4a6e; --accent-light: #eef2f7; --radius: 8px;
+    }
+    body {
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg); color: var(--text-primary); line-height: 1.6;
+    }
+    .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+    .back { display: inline-block; margin-bottom: 1.5rem; color: var(--accent); text-decoration: none; font-size: 0.875rem; }
+    .back:hover { text-decoration: underline; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+    .topic { display: inline-block; font-size: 0.75rem; font-weight: 600; color: var(--accent); background: var(--accent-light); padding: 0.125rem 0.5rem; border-radius: 4px; margin-bottom: 0.75rem; }
+    h1 { font-size: 1.375rem; margin-bottom: 1rem; line-height: 1.4; }
+    .label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.375rem; }
+    .summary { background: var(--accent-light); padding: 1rem; border-radius: var(--radius); color: var(--text-secondary); margin-bottom: 1.25rem; white-space: pre-wrap; }
+    .body, .sources { white-space: pre-wrap; color: var(--text-primary); margin-bottom: 1.25rem; line-height: 1.75; }
+    .meta { font-size: 0.8125rem; color: var(--text-muted); margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .error { color: #b42318; background: #fef3f2; padding: 1rem; border-radius: var(--radius); }
+    .loading { color: var(--text-muted); text-align: center; padding: 3rem 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="/">← 아카이브로 돌아가기</a>
+    <div id="content" class="loading">보고서를 불러오는 중…</div>
+  </div>
+  <script>
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+
+    async function loadReport() {
+      const id = new URLSearchParams(location.search).get("id");
+      const el = document.getElementById("content");
+      if (!id) {
+        el.className = "error";
+        el.textContent = "보고서 ID가 없습니다.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/report?id=${encodeURIComponent(id)}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "불러오기 실패");
+
+        const r = data.report;
+        el.className = "card";
+        el.innerHTML = `
+          <span class="topic">${escapeHtml(r.topic || "주제 없음")}</span>
+          <h1>${escapeHtml(r.title || "제목 없음")}</h1>
+          <div class="label">요약</div>
+          <div class="summary">${escapeHtml(r.summary || "요약 없음")}</div>
+          <div class="label">본문</div>
+          <div class="body">${escapeHtml(r.content || "본문 없음")}</div>
+          <div class="label">참고 출처</div>
+          <div class="sources">${escapeHtml(r.sources || "출처 없음")}</div>
+          <div class="meta">${formatDate(r.created_at)} · ${escapeHtml(r.source_type || "search")}</div>`;
+      } catch (err) {
+        el.className = "error";
+        el.textContent = err.message;
+      }
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>

@@ -2,4 +2,5 @@
 .env.local
 .env.*.local
 .vercel
+.data/
 node_modules/

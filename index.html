@@ -124,6 +124,42 @@
       color: #027a48;
     }
 
+    .kakao-banner {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      border: 1px solid var(--border);
+      background: #fff9e6;
+      color: #5c4a00;
+    }
+
+    .kakao-banner--ok {
+      background: #ecfdf3;
+      color: #027a48;
+      border-color: #abefc6;
+    }
+
+    .kakao-banner a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .kakao-banner a:hover {
+      text-decoration: underline;
+    }
+
+    .report-list-item__title a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .report-list-item__title a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
     section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -388,6 +424,7 @@
         <button type="submit" id="research-btn">리서치 실행</button>
       </form>
       <p id="research-status" class="research-status" hidden></p>
+      <div id="kakao-banner" class="kakao-banner" hidden></div>
     </header>
 
     <div id="research-results" hidden>
@@ -451,8 +488,10 @@
     const reportPanel = document.getElementById("report-panel");
     const reportMeta = document.getElementById("report-meta");
     const reportListEl = document.getElementById("report-list");
+    const kakaoBanner = document.getElementById("kakao-banner");
 
     let highlightReportId = null;
+    let kakaoLoginUrl = "/api/kakao/oauth/login";
 
     function escapeHtml(str) {
       if (!str) return "";
@@ -473,6 +512,27 @@
       researchBtn.disabled = loading;
       topicInput.disabled = loading;
       researchBtn.textContent = loading ? "작성 중…" : "리서치 실행";
+    }
+
+    function renderKakaoBanner(configured, message) {
+      kakaoBanner.hidden = false;
+      kakaoBanner.className = `kakao-banner${configured ? " kakao-banner--ok" : ""}`;
+      if (configured) {
+        kakaoBanner.textContent = message || "카카오톡 연동됨 — 보고서 완성 시 나에게 보내기로 전송됩니다.";
+        return;
+      }
+      kakaoBanner.innerHTML = `${escapeHtml(message || "카카오톡 연동이 필요합니다.")} <a href="${escapeHtml(kakaoLoginUrl)}">카카오 로그인</a>`;
+    }
+
+    async function loadKakaoStatus() {
+      try {
+        const res = await fetch("/api/kakao/status");
+        const data = await res.json().catch(() => ({}));
+        if (data.loginUrl) kakaoLoginUrl = data.loginUrl;
+        renderKakaoBanner(Boolean(data.configured));
+      } catch {
+        kakaoBanner.hidden = true;
+      }
     }
 
     function formatDate(iso) {
@@ -506,7 +566,9 @@
         return `
           <li class="report-list-item${isNew ? " report-list-item--new" : ""}" data-id="${item.id}">
             <span class="report-list-item__topic">${escapeHtml(item.topic || "주제 없음")}</span>
-            <div class="report-list-item__title">${escapeHtml(item.title || "제목 없음")}</div>
+            <div class="report-list-item__title">
+              <a href="/report.html?id=${item.id}">${escapeHtml(item.title || "제목 없음")}</a>
+            </div>
             <div class="report-list-item__summary">${escapeHtml(item.summary || "")}</div>
             <div class="report-list-item__meta">${formatDate(item.created_at)} · ${escapeHtml(item.source_type || "search")}</div>
           </li>`;
@@ -659,18 +721,30 @@
         const nCount = data.summary?.naverCount ?? 0;
         const reportOk = data.report?.ok;
         const saved = data.report?.saved;
+        const kakaoSent = data.report?.kakaoSent;
         if (saved && data.report?.savedId) {
           await loadReportList(data.report.savedId);
         }
 
-        setStatus(
-          reportOk
-            ? saved
-              ? `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 보고서 저장됨`
-              : `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 실패: ${data.report?.saveError || ""}`
-            : `검색 완료 (${tCount}/${nCount}건) · 보고서: ${data.report?.error || "생성 실패"}`,
-          reportOk && saved ? "ok" : reportOk ? "error" : "error"
-        );
+        let statusMsg;
+        let statusType = "ok";
+        if (reportOk && saved && kakaoSent) {
+          statusMsg = `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 및 카카오톡 전송됨`;
+        } else if (reportOk && saved) {
+          statusMsg = `완료 — 보고서 저장됨 · 카카오: ${data.report?.kakaoError || "전송 실패"}`;
+          statusType = data.report?.kakaoError ? "error" : "ok";
+          if (data.report?.kakaoLoginUrl) {
+            kakaoLoginUrl = data.report.kakaoLoginUrl;
+            renderKakaoBanner(false, data.report.kakaoError);
+          }
+        } else if (reportOk) {
+          statusMsg = `완료 — 글로벌 ${tCount}건, 국내 ${nCount}건 · 저장 실패: ${data.report?.saveError || ""}`;
+          statusType = "error";
+        } else {
+          statusMsg = `검색 완료 (${tCount}/${nCount}건) · 보고서: ${data.report?.error || "생성 실패"}`;
+          statusType = "error";
+        }
+        setStatus(statusMsg, statusType);
       } catch (err) {
         setStatus(err.message, "error");
         renderReport({ ok: false, error: err.message });
@@ -682,6 +756,7 @@
     });
 
     loadReportList();
+    loadKakaoStatus();
   </script>
 </body>
 </html>

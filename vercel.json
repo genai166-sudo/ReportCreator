@@ -3,7 +3,7 @@
   "version": 2,
   "installCommand": "npm install --omit=dev",
   "functions": {
-    "api/*.js": {
+    "api/**/*.js": {
       "maxDuration": 60,
       "includeFiles": "prompt/**"
     }

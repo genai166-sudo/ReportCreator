@@ -12,6 +12,7 @@
     "node": "24.x"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.49.1",
     "dotenv": "^16.4.5"
   }

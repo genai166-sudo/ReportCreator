@@ -649,7 +649,7 @@
     <section aria-labelledby="file-analyze-heading">
       <div class="section-header section-header--analyze">
         <h2 id="file-analyze-heading">파일 분석</h2>
-        <p class="section-meta">PDF · 이미지 · 음성 (최대 50MB) · AI로 분석합니다</p>
+        <p class="section-meta">PDF · 이미지 · 음성 (최대 50MB, 3.5MB 이상은 Storage 경유)</p>
       </div>
       <div class="file-analyze-panel">
         <form id="file-analyze-form" class="file-analyze-form">
@@ -1159,80 +1159,71 @@
       return data;
     }
 
-    function blobToBase64(blob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = String(reader.result || "");
-          resolve(result.split(",")[1] || "");
-        };
-        reader.onerror = () => reject(new Error("파일을 읽지 못했습니다."));
-        reader.readAsDataURL(blob);
-      });
-    }
+    const VERCEL_SAFE_BYTES = 3.5 * 1024 * 1024;
 
-    async function uploadFileInChunks(file, uploadUrl, onProgress) {
-      const CHUNK_SIZE = 2 * 1024 * 1024;
-      let offset = 0;
-      let geminiFile = null;
+    async function uploadToSignedUrl(signedUrl, token, file) {
+      const url = new URL(signedUrl);
+      if (token && !url.searchParams.get("token")) {
+        url.searchParams.set("token", token);
+      }
 
-      while (offset < file.size) {
-        const chunk = file.slice(offset, offset + CHUNK_SIZE);
-        const finalize = offset + chunk.size >= file.size;
-        const data = await blobToBase64(chunk);
+      const body = new FormData();
+      body.append("cacheControl", "3600");
+      body.append("", file);
 
-        const result = await fetchJson("/api/analyze-file/upload-chunk", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uploadUrl, offset, finalize, data }),
+      let res;
+      try {
+        res = await fetch(url.toString(), {
+          method: "PUT",
+          headers: { "x-upsert": "false" },
+          body,
         });
-
-        offset += chunk.size;
-        if (onProgress) {
-          onProgress(Math.min(100, Math.round((offset / file.size) * 100)));
-        }
-
-        if (finalize) {
-          geminiFile = result.file;
-        }
+      } catch (err) {
+        throw new Error(
+          err?.message === "Failed to fetch"
+            ? "Storage 업로드 네트워크 오류 — 연결을 확인해 주세요."
+            : err?.message || "Storage upload failed"
+        );
       }
 
-      if (!geminiFile?.uri || !geminiFile?.name) {
-        throw new Error("업로드는 됐지만 파일 정보를 받지 못했습니다.");
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Storage upload failed (${res.status})`);
       }
-      return geminiFile;
     }
 
-    async function analyzeFileViaDirectUpload(file, prompt) {
-      setFileAnalyzeStatus("업로드 준비 중…", false);
+    async function analyzeUploadedFile(file, prompt) {
+      if (file.size <= VERCEL_SAFE_BYTES) {
+        setFileAnalyzeStatus("AI가 파일을 분석하고 있습니다…", false);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("prompt", prompt);
+        return fetchJson("/api/analyze-file", { method: "POST", body: formData });
+      }
 
-      const initData = await fetchJson("/api/analyze-file/init", {
+      setFileAnalyzeStatus("업로드 준비 중…", false);
+      const prep = await fetchJson("/api/analyze-file/prepare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileName: file.name,
-          mimeType: file.type,
           size: file.size,
+          mimeType: file.type,
         }),
       });
 
-      setFileAnalyzeStatus("파일 업로드 중 (0%)…", false);
-
-      const geminiFile = await uploadFileInChunks(file, initData.uploadUrl, (pct) => {
-        setFileAnalyzeStatus(`파일 업로드 중 (${pct}%)…`, false);
-      });
+      setFileAnalyzeStatus("파일 업로드 중…", false);
+      await uploadToSignedUrl(prep.signedUrl, prep.token, file);
 
       setFileAnalyzeStatus("AI가 파일을 분석하고 있습니다…", false);
-
-      return fetchJson("/api/analyze-file/run", {
+      return fetchJson("/api/analyze-file/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt,
+          storagePath: prep.storagePath,
           fileName: file.name,
-          mimeType: initData.mimeType || file.type,
-          fileUri: geminiFile.uri,
-          geminiFileName: geminiFile.name,
+          mimeType: file.type,
+          prompt,
         }),
       });
     }
@@ -1255,7 +1246,7 @@
       fileAnalyzeResult.hidden = false;
 
       try {
-        const data = await analyzeFileViaDirectUpload(file, prompt);
+        const data = await analyzeUploadedFile(file, prompt);
         renderFileAnalyzeResult(data, mode);
         setFileAnalyzeStatus("분석이 완료되었습니다.", false);
       } catch (err) {

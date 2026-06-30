@@ -696,7 +696,7 @@
       }
 
       const results = data.results || [];
-      tavilyMeta.textContent = `"${escapeHtml(data.query || "")}" · ${results.length}건`;
+      tavilyMeta.textContent = `"${escapeHtml(data.query || "")}" · 관련도순 ${results.length}건`;
 
       if (!results.length) {
         renderEmpty(tavilyList, "검색 결과가 없습니다.");
@@ -728,7 +728,7 @@
       }
 
       const items = data.items || [];
-      naverMeta.textContent = `총 ${data.total ?? items.length}건 중 ${items.length}건 표시`;
+      naverMeta.textContent = `관련도순 · 총 ${data.total ?? items.length}건 중 ${items.length}건 표시`;
 
       if (!items.length) {
         renderEmpty(naverList, "검색 결과가 없습니다.");

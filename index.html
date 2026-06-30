@@ -1188,7 +1188,18 @@
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        throw new Error(text || `Storage upload failed (${res.status})`);
+        let message = text || `Storage upload failed (${res.status})`;
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.message) message = parsed.message;
+          if (parsed?.error) message = parsed.error;
+        } catch {
+          // keep raw text
+        }
+        if (/related resource does not exist/i.test(message)) {
+          message = "Storage 버킷(temp-analysis)이 없습니다. 관리자에게 문의하세요.";
+        }
+        throw new Error(message);
       }
     }
 

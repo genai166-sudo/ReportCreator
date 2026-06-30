@@ -1143,10 +1143,70 @@
       fileAnalyzeBtn.disabled = false;
     });
 
-    async function analyzeFileViaDirectUpload(file, prompt, mode) {
+    async function fetchJson(url, options = {}) {
+      let res;
+      try {
+        res = await fetch(url, options);
+      } catch (err) {
+        throw new Error(
+          err?.message === "Failed to fetch"
+            ? "네트워크 오류 — 연결을 확인하거나 잠시 후 다시 시도해 주세요."
+            : err?.message || "요청 실패"
+        );
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `요청 실패 (${res.status})`);
+      return data;
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = String(reader.result || "");
+          resolve(result.split(",")[1] || "");
+        };
+        reader.onerror = () => reject(new Error("파일을 읽지 못했습니다."));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function uploadFileInChunks(file, uploadUrl, onProgress) {
+      const CHUNK_SIZE = 2 * 1024 * 1024;
+      let offset = 0;
+      let geminiFile = null;
+
+      while (offset < file.size) {
+        const chunk = file.slice(offset, offset + CHUNK_SIZE);
+        const finalize = offset + chunk.size >= file.size;
+        const data = await blobToBase64(chunk);
+
+        const result = await fetchJson("/api/analyze-file/upload-chunk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uploadUrl, offset, finalize, data }),
+        });
+
+        offset += chunk.size;
+        if (onProgress) {
+          onProgress(Math.min(100, Math.round((offset / file.size) * 100)));
+        }
+
+        if (finalize) {
+          geminiFile = result.file;
+        }
+      }
+
+      if (!geminiFile?.uri || !geminiFile?.name) {
+        throw new Error("업로드는 됐지만 파일 정보를 받지 못했습니다.");
+      }
+      return geminiFile;
+    }
+
+    async function analyzeFileViaDirectUpload(file, prompt) {
       setFileAnalyzeStatus("업로드 준비 중…", false);
 
-      const initRes = await fetch("/api/analyze-file/init", {
+      const initData = await fetchJson("/api/analyze-file/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1155,33 +1215,16 @@
           size: file.size,
         }),
       });
-      const initData = await initRes.json().catch(() => ({}));
-      if (!initRes.ok) throw new Error(initData.error || `업로드 준비 실패 (${initRes.status})`);
 
-      setFileAnalyzeStatus("파일을 Gemini로 업로드하는 중…", false);
+      setFileAnalyzeStatus("파일 업로드 중 (0%)…", false);
 
-      const uploadRes = await fetch(initData.uploadUrl, {
-        method: "POST",
-        headers: {
-          "Content-Length": String(file.size),
-          "X-Goog-Upload-Offset": "0",
-          "X-Goog-Upload-Command": "upload, finalize",
-        },
-        body: file,
+      const geminiFile = await uploadFileInChunks(file, initData.uploadUrl, (pct) => {
+        setFileAnalyzeStatus(`파일 업로드 중 (${pct}%)…`, false);
       });
-      const uploadData = await uploadRes.json().catch(() => ({}));
-      if (!uploadRes.ok) {
-        throw new Error(uploadData?.error?.message || `파일 업로드 실패 (${uploadRes.status})`);
-      }
-
-      const geminiFile = uploadData.file;
-      if (!geminiFile?.uri || !geminiFile?.name) {
-        throw new Error("업로드는 됐지만 파일 정보를 받지 못했습니다.");
-      }
 
       setFileAnalyzeStatus("AI가 파일을 분석하고 있습니다…", false);
 
-      const runRes = await fetch("/api/analyze-file/run", {
+      return fetchJson("/api/analyze-file/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1192,10 +1235,6 @@
           geminiFileName: geminiFile.name,
         }),
       });
-      const runData = await runRes.json().catch(() => ({}));
-      if (!runRes.ok) throw new Error(runData.error || `분석 실패 (${runRes.status})`);
-
-      return runData;
     }
 
     fileAnalyzeForm.addEventListener("submit", async (e) => {
@@ -1216,7 +1255,7 @@
       fileAnalyzeResult.hidden = false;
 
       try {
-        const data = await analyzeFileViaDirectUpload(file, prompt, mode);
+        const data = await analyzeFileViaDirectUpload(file, prompt);
         renderFileAnalyzeResult(data, mode);
         setFileAnalyzeStatus("분석이 완료되었습니다.", false);
       } catch (err) {

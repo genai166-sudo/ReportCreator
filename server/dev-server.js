@@ -1,7 +1,5 @@
 /**
- * 로컬 개발 서버 (대안) — Vercel CLI 없이 빠르게 테스트할 때
- * Vercel과 동일 환경: npm run dev  (vercel dev)
- *
+ * 로컬 개발 서버 — Vercel catch-all API 라우터와 동일 경로
  * 실행: npm run dev:node
  */
 
@@ -11,36 +9,12 @@ const path = require("path");
 const { URL } = require("url");
 
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+
+const { handler, ROUTES } = require("../lib/api-router");
 const { readRawBody } = require("../lib/parse-upload");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, "..");
-const API_DIR = path.join(ROOT, "api");
-
-// api 폴더 하위 .js 파일을 /api/... 경로에 자동 등록
-function loadApiHandlers(dir = API_DIR, routePrefix = "/api") {
-  const handlers = {};
-  if (!fs.existsSync(dir)) return handlers;
-
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      Object.assign(handlers, loadApiHandlers(fullPath, `${routePrefix}/${entry.name}`));
-      continue;
-    }
-    if (!entry.name.endsWith(".js")) continue;
-    const route = `${routePrefix}/${entry.name.replace(/\.js$/, "")}`;
-    try {
-      handlers[route] = require(fullPath);
-    } catch (err) {
-      console.error(`Failed to load API route ${route}:`, err.message);
-    }
-  }
-
-  return handlers;
-}
-
-const apiHandlers = loadApiHandlers();
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -52,31 +26,22 @@ const MIME = {
   ".ico": "image/x-icon",
 };
 
-function readBody(req) {
+function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let raw = "";
     req.on("data", (chunk) => {
       raw += chunk;
-      if (raw.length > 1e6) reject(new Error("Payload too large"));
+      if (raw.length > 1024 * 1024) reject(Object.assign(new Error("Payload too large"), { status: 413 }));
     });
     req.on("end", () => {
       try {
         resolve(raw ? JSON.parse(raw) : {});
       } catch {
-        reject(new Error("Invalid JSON"));
+        reject(Object.assign(new Error("Invalid JSON"), { status: 400 }));
       }
     });
     req.on("error", reject);
   });
-}
-
-function toVercelRequest(req, body, query = {}) {
-  return {
-    method: req.method,
-    url: req.url,
-    query,
-    body,
-  };
 }
 
 function createVercelResponse(res) {
@@ -118,52 +83,34 @@ function createVercelResponse(res) {
 }
 
 async function dispatchApi(req, res, pathname, searchParams) {
+  const segments = pathname.replace(/^\/api\/?/, "").split("/").filter(Boolean);
   const query = Object.fromEntries(searchParams.entries());
-  let body = {};
+  query.slug = segments;
 
-  if (pathname === "/api/analyze-file" && req.method === "POST") {
-    try {
-      const rawBody = await readRawBody(req);
-      body = { __rawBody: rawBody };
-      const vercelReq = Object.assign({}, toVercelRequest(req, body, query), {
-        rawBody,
-        headers: req.headers,
-      });
-      const vercelRes = createVercelResponse(res);
-      await apiHandlers[pathname](vercelReq, vercelRes);
-      return;
-    } catch (err) {
-      res.writeHead(err.status || 400, { "Content-Type": "application/json; charset=utf-8" });
-      res.end(JSON.stringify({ error: err.message }));
-      return;
+  const vercelReq = {
+    method: req.method,
+    url: req.url,
+    query,
+    headers: req.headers,
+    body: {},
+  };
+
+  try {
+    if (segments.join("/") === "analyze-file" && req.method === "POST") {
+      vercelReq.rawBody = await readRawBody(req);
+    } else if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
+      vercelReq.body = await readJsonBody(req);
     }
+
+    await handler(vercelReq, createVercelResponse(res));
+  } catch (err) {
+    res.writeHead(err.status || 500, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ error: err.message }));
   }
-
-  if (req.method === "POST") {
-    try {
-      body = await readBody(req);
-    } catch (err) {
-      res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
-      res.end(JSON.stringify({ error: err.message }));
-      return;
-    }
-  }
-
-  const vercelReq = toVercelRequest(req, body, query);
-  const vercelRes = createVercelResponse(res);
-
-  const handler = apiHandlers[pathname];
-  if (handler) {
-    await handler(vercelReq, vercelRes);
-    return;
-  }
-
-  res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
-  res.end(JSON.stringify({ error: "Not Found", path: pathname }));
 }
 
 function serveStatic(req, res, pathname) {
-  let urlPath = pathname === "/" ? "/index.html" : pathname;
+  const urlPath = pathname === "/" ? "/index.html" : pathname;
   const filePath = path.normalize(path.join(ROOT, urlPath));
 
   if (!filePath.startsWith(ROOT)) {
@@ -204,9 +151,9 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Archive: http://localhost:${PORT}`);
-  console.log("API routes:");
-  for (const route of Object.keys(apiHandlers).sort()) {
-    console.log(`  ${route}`);
+  console.log("API routes (single function):");
+  for (const route of Object.keys(ROUTES).sort()) {
+    console.log(`  /api/${route}`);
   }
 
   const warnings = [];

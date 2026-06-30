@@ -3,9 +3,6 @@
   "version": 2,
   "functions": {
     "api/*.js": {
-      "maxDuration": 30
-    },
-    "api/research.js": {
       "maxDuration": 60,
       "includeFiles": "prompt/**"
     }

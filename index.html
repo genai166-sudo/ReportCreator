@@ -649,7 +649,7 @@
     <section aria-labelledby="file-analyze-heading">
       <div class="section-header section-header--analyze">
         <h2 id="file-analyze-heading">파일 분석</h2>
-        <p class="section-meta">PDF · 이미지 · 음성을 AI로 분석합니다</p>
+        <p class="section-meta">PDF · 이미지 · 음성 (최대 50MB) · AI로 분석합니다</p>
       </div>
       <div class="file-analyze-panel">
         <form id="file-analyze-form" class="file-analyze-form">
@@ -1143,6 +1143,61 @@
       fileAnalyzeBtn.disabled = false;
     });
 
+    async function analyzeFileViaDirectUpload(file, prompt, mode) {
+      setFileAnalyzeStatus("업로드 준비 중…", false);
+
+      const initRes = await fetch("/api/analyze-file/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          mimeType: file.type,
+          size: file.size,
+        }),
+      });
+      const initData = await initRes.json().catch(() => ({}));
+      if (!initRes.ok) throw new Error(initData.error || `업로드 준비 실패 (${initRes.status})`);
+
+      setFileAnalyzeStatus("파일을 Gemini로 업로드하는 중…", false);
+
+      const uploadRes = await fetch(initData.uploadUrl, {
+        method: "POST",
+        headers: {
+          "Content-Length": String(file.size),
+          "X-Goog-Upload-Offset": "0",
+          "X-Goog-Upload-Command": "upload, finalize",
+        },
+        body: file,
+      });
+      const uploadData = await uploadRes.json().catch(() => ({}));
+      if (!uploadRes.ok) {
+        throw new Error(uploadData?.error?.message || `파일 업로드 실패 (${uploadRes.status})`);
+      }
+
+      const geminiFile = uploadData.file;
+      if (!geminiFile?.uri || !geminiFile?.name) {
+        throw new Error("업로드는 됐지만 파일 정보를 받지 못했습니다.");
+      }
+
+      setFileAnalyzeStatus("AI가 파일을 분석하고 있습니다…", false);
+
+      const runRes = await fetch("/api/analyze-file/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          fileName: file.name,
+          mimeType: initData.mimeType || file.type,
+          fileUri: geminiFile.uri,
+          geminiFileName: geminiFile.name,
+        }),
+      });
+      const runData = await runRes.json().catch(() => ({}));
+      if (!runRes.ok) throw new Error(runData.error || `분석 실패 (${runRes.status})`);
+
+      return runData;
+    }
+
     fileAnalyzeForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const file = fileAnalyzeInput.files?.[0];
@@ -1152,26 +1207,16 @@
       }
 
       const mode = getSelectedAnalyzeMode();
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("prompt", ANALYSIS_PROMPTS[mode]);
+      const prompt = ANALYSIS_PROMPTS[mode];
 
       fileAnalyzeBtn.disabled = true;
       fileAnalyzeInput.disabled = true;
       fileAnalyzeBtn.textContent = "분석 중…";
-      setFileAnalyzeStatus("AI가 파일을 분석하고 있습니다…", false);
-      fileAnalyzeResult.hidden = true;
       fileAnalyzeResult.innerHTML = renderLoadingPanel("AI가 파일을 분석하고 있습니다…");
       fileAnalyzeResult.hidden = false;
 
       try {
-        const res = await fetch("/api/analyze-file", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || `분석 실패 (${res.status})`);
-
+        const data = await analyzeFileViaDirectUpload(file, prompt, mode);
         renderFileAnalyzeResult(data, mode);
         setFileAnalyzeStatus("분석이 완료되었습니다.", false);
       } catch (err) {

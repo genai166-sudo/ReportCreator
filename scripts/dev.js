@@ -10,21 +10,29 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const PORT = process.env.PORT || "3000";
-const VERCEL_BIN = path.join(ROOT, "node_modules", "vercel", "dist", "index.js");
 
-function hasEnvFile() {
-  return fs.existsSync(path.join(ROOT, ".env"));
+function runVercel(args) {
+  const child = spawn("npx", ["vercel", ...args], {
+    cwd: ROOT,
+    stdio: "inherit",
+    env: process.env,
+    shell: true,
+  });
+  child.on("exit", (code) => process.exit(code ?? 0));
 }
 
 function isVercelLoggedIn() {
-  if (!fs.existsSync(VERCEL_BIN)) return false;
-
-  const result = spawnSync(process.execPath, [VERCEL_BIN, "whoami"], {
+  const result = spawnSync("npx", ["vercel", "whoami"], {
     cwd: ROOT,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    shell: true,
   });
   return result.status === 0 && Boolean(result.stdout?.trim());
+}
+
+function hasEnvFile() {
+  return fs.existsSync(path.join(ROOT, ".env"));
 }
 
 function runNode(scriptRelative) {
@@ -38,12 +46,7 @@ function runNode(scriptRelative) {
 }
 
 function runVercelDev() {
-  const child = spawn(process.execPath, [VERCEL_BIN, "dev", "--listen", PORT], {
-    cwd: ROOT,
-    stdio: "inherit",
-    env: process.env,
-  });
-  child.on("exit", (code) => process.exit(code ?? 0));
+  runVercel(["dev", "--listen", PORT]);
 }
 
 function main() {

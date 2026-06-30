@@ -5,9 +5,8 @@
   "scripts": {
     "predev": "node scripts/check-node.js",
     "dev": "node scripts/dev.js",
-    "dev:vercel": "vercel dev --listen 3000",
-    "dev:node": "node server/dev-server.js",
-    "build": "node -e \"console.log('Static site — no build step')\""
+    "dev:vercel": "npx vercel dev --listen 3000",
+    "dev:node": "node server/dev-server.js"
   },
   "engines": {
     "node": "24.x"
@@ -15,8 +14,5 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
     "dotenv": "^16.4.5"
-  },
-  "devDependencies": {
-    "vercel": "^44.0.0"
   }
 }

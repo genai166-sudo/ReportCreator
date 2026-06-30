@@ -2,8 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "npm install --omit=dev",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index?slug=$1"
+    }
+  ],
   "functions": {
-    "api/[...slug].js": {
+    "api/index.js": {
       "maxDuration": 60,
       "includeFiles": "prompt/**"
     }
